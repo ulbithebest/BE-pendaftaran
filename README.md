@@ -1,4 +1,54 @@
-# BE-pendaftaran
+# BE-pendaftaran (Refactored)
+
+Backend pendaftaran HIMATIF dengan struktur modular/clean ala pdfmbackend.
+
+## Struktur Folder Baru
+
+```
+cmd/main.go
+config/
+  - db.go
+  - token.go
+controller/
+  - auth.go
+  - registration.go
+  - admin.go
+model/
+  - user.go
+  - registration.go
+route/
+  - route.go
+helper/
+  - jwt.go
+  - response.go
+middleware/
+  - auth.go
+uploads/
+mod/ (untuk fitur/layanan lain di masa depan)
+```
+
+## Menjalankan
+
+1. `go mod tidy`
+2. Jalankan MongoDB lokal
+3. Jalankan:
+   ```sh
+   go run ./cmd/main.go
+   ```
+
+## Endpoint Utama
+- /api/register, /api/login
+- /api/me, /api/registration, /api/upload/cv
+- /api/admin/registrations, /api/admin/registration/:id, /api/admin/registration/:id/status
+
+## Catatan
+- Semua handler, model, helper, config, dan middleware sudah dipisah sesuai best practice.
+- Siap untuk pengembangan modular di folder `mod/`.
+
+---
+
+Struktur dan kode sudah mengikuti inspirasi dari project pdfmbackend untuk maintainability dan scalability.
+
 
 Backend web service untuk aplikasi pendaftaran organisasi HIMATIF berbasis Golang (Fiber v2) dan MongoDB.
 
