@@ -5,7 +5,7 @@ import (
 	"time"
 	"ulbithebest/BE-pendaftaran/config"
 	"ulbithebest/BE-pendaftaran/helper"
-	"ulbithebest/BE-pendaftaran/models"
+	"ulbithebest/BE-pendaftaran/model"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,7 +20,7 @@ func ListRegistrations(c *fiber.Ctx) error {
 	if err != nil {
 		return helper.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch registrations")
 	}
-	var regs []models.Registration
+	var regs []model.Registration
 	if err := cursor.All(ctx, &regs); err != nil {
 		return helper.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to decode registrations")
 	}
@@ -36,7 +36,7 @@ func GetRegistrationDetail(c *fiber.Ctx) error {
 	regCol := config.GetCollection("registrations")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var reg models.Registration
+	var reg model.Registration
 	err = regCol.FindOne(ctx, bson.M{"_id": objID}).Decode(&reg)
 	if err != nil {
 		return helper.ErrorResponse(c, fiber.StatusNotFound, "Registration not found")

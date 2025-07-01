@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"ulbithebest/BE-pendaftaran/models"
+	"ulbithebest/BE-pendaftaran/model"
 	"ulbithebest/BE-pendaftaran/helper"
 	"ulbithebest/BE-pendaftaran/config"
 )
@@ -36,7 +36,7 @@ func SubmitRegistration(c *fiber.Ctx) error {
 	if count > 0 {
 		return helper.ErrorResponse(c, fiber.StatusBadRequest, "You have already registered")
 	}
-	reg := models.Registration{
+	reg := model.Registration{
 		ID:         primitive.NewObjectID(),
 		UserID:     objID,
 		Division:   body.Division,
@@ -59,7 +59,7 @@ func GetMyRegistration(c *fiber.Ctx) error {
 	regCol := config.GetCollection("registrations")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var reg models.Registration
+	var reg model.Registration
 	err := regCol.FindOne(ctx, bson.M{"user_id": objID}).Decode(&reg)
 	if err != nil {
 		return helper.ErrorResponse(c, fiber.StatusNotFound, "No registration found")

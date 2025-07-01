@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"ulbithebest/BE-pendaftaran/models"
+	"ulbithebest/BE-pendaftaran/model"
 	"ulbithebest/BE-pendaftaran/helper"
 	"ulbithebest/BE-pendaftaran/config"
 )
@@ -38,7 +38,7 @@ func RegisterUser(c *fiber.Ctx) error {
 	if err != nil {
 		return helper.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to hash password")
 	}
-	user := models.User{
+	user := model.User{
 		ID:       primitive.NewObjectID(),
 		Name:     body.Name,
 		NIM:      body.NIM,
@@ -65,7 +65,7 @@ func LoginUser(c *fiber.Ctx) error {
 	userCol := config.GetCollection("users")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var user models.User
+	var user model.User
 	err := userCol.FindOne(ctx, bson.M{"email": strings.ToLower(body.Email)}).Decode(&user)
 	if err != nil {
 		return helper.ErrorResponse(c, fiber.StatusUnauthorized, "Invalid email or password")
@@ -85,7 +85,7 @@ func GetMe(c *fiber.Ctx) error {
 	userCol := config.GetCollection("users")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var user models.User
+	var user model.User
 	objID, _ := primitive.ObjectIDFromHex(userID)
 	err := userCol.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
 	if err != nil {
