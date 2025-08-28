@@ -1,121 +1,97 @@
-# BE-pendaftaran (Refactored)
+# Pendaftaran Anggota HIMATIF - Backend 🚀
 
-Backend pendaftaran HIMATIF dengan struktur modular/clean ala pdfmbackend.
+![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=Cloudinary&logoColor=white)
+![Paseto](https://img.shields.io/badge/Paseto-000000?style=for-the-badge&logo=paseto&logoColor=white)
 
-## Struktur Folder Baru
-
-```
-cmd/main.go
-config/
-  - db.go
-  - token.go
-controller/
-  - auth.go
-  - registration.go
-  - admin.go
-model/
-  - user.go
-  - registration.go
-route/
-  - route.go
-helper/
-  - jwt.go
-  - response.go
-middleware/
-  - auth.go
-uploads/
-mod/ (untuk fitur/layanan lain di masa depan)
-```
-
-## Menjalankan
-
-1. `go mod tidy`
-2. Jalankan MongoDB lokal
-3. Jalankan:
-   ```sh
-   go run ./cmd/main.go
-   ```
-
-## Endpoint Utama
-- /api/register, /api/login
-- /api/me, /api/registration, /api/upload/cv
-- /api/admin/registrations, /api/admin/registration/:id, /api/admin/registration/:id/status
-
-## Catatan
-- Semua handler, model, helper, config, dan middleware sudah dipisah sesuai best practice.
-- Siap untuk pengembangan modular di folder `mod/`.
+Selamat datang di layanan backend untuk Aplikasi Pendaftaran Anggota Baru HIMATIF! Dibuat dengan Go, layanan ini menyediakan REST API yang tangguh dan aman untuk mengelola seluruh alur pendaftaran, mulai dari otentikasi pengguna hingga manajemen file di *cloud*.
 
 ---
 
-Struktur dan kode sudah mengikuti inspirasi dari project pdfmbackend untuk maintainability dan scalability.
+## ✨ Fitur Unggulan
 
-
-Backend web service untuk aplikasi pendaftaran organisasi HIMATIF berbasis Golang (Fiber v2) dan MongoDB.
-
-## Struktur Folder
-
-```
-cmd/main.go
-controllers/
-  - auth_controller.go
-  - registration_controller.go
-  - admin_controller.go
-models/
-  - user.go
-  - registration.go
-routes/routes.go
-utils/
-  - db.go
-  - jwt.go
-  - response.go
-middleware/auth.go
-uploads/ (untuk file CV)
-```
-
-## Setup & Menjalankan
-
-1. **Clone repo dan install dependencies**
-   ```sh
-   go mod tidy
-   ```
-2. **Set environment variable (opsional):**
-   - `MONGODB_URI` (default: mongodb://localhost:27017)
-   - `JWT_SECRET` (default: supersecretkey)
-3. **Jalankan server**
-   ```sh
-   go run ./cmd/main.go
-   ```
-
-## Endpoint API
-
-### AUTH
-- `POST /api/register` — Register user
-- `POST /api/login` — Login user, return JWT token
-
-### USER (wajib JWT)
-- `GET /api/me` — Info user
-- `POST /api/registration` — Submit form pendaftaran
-- `GET /api/registration` — Data pendaftaran user
-- `POST /api/upload/cv` — Upload CV (PDF)
-
-### ADMIN (wajib JWT + admin)
-- `GET /api/admin/registrations` — Semua pendaftar
-- `GET /api/admin/registration/:id` — Detail pendaftar
-- `POST /api/admin/registration/:id/status` — Update status (`lulus`, `tidak_lulus`, `menunggu`)
-
-## Format Collection MongoDB
-
-### users
-- `_id`, `name`, `nim`, `email`, `password` (hashed), `role` ("admin"/"user")
-
-### registrations
-- `_id`, `user_id`, `division`, `motivation`, `cv_path`, `status`, `note`, `updated_at`
-
-## Catatan
-- Semua response dalam format JSON rapi.
-- Upload CV ke folder `uploads/`, path file disimpan di database.
-- Untuk akses admin, ubah field `role` user di DB menjadi `admin`.
+-   **Otentikasi Modern & Aman**: Menggunakan **Paseto (PASETO)**, alternatif superior dari JWT, untuk token yang lebih aman.
+-   **Manajemen User Lengkap**: Registrasi dan Login untuk calon anggota baru.
+-   **Pendaftaran Online**: Pengguna dapat mengisi formulir pendaftaran secara lengkap.
+-   **Cloud File Uploads**: CV dan sertifikat diunggah langsung ke **Cloudinary**, memastikan penyimpanan file yang efisien dan aman.
+-   **Dashboard Admin Komprehensif**: Admin dapat melihat, mengelola, memperbarui status (termasuk aksi massal), dan menghapus pendaftar.
+-   **Manajemen Informasi**: Admin dapat membuat, membaca, memperbarui, dan menghapus pengumuman atau informasi untuk semua pengguna.
 
 ---
 
-Jika ada error atau butuh bantuan lebih lanjut, silakan hubungi pengembang atau cek file source code untuk dokumentasi lebih lanjut.
+## 🛠️ Tumpukan Teknologi
+
+-   **Bahasa**: Go (v1.23+)
+-   **Database**: MongoDB Atlas
+-   **Router**: Chi (v5)
+-   **Otentikasi**: Paseto (v2)
+-   **Penyimpanan File**: Cloudinary
+-   **Driver DB**: `go.mongodb.org/mongo-driver`
+-   **Lainnya**: `godotenv` untuk manajemen *environment*, `bcrypt` untuk *hashing* password.
+
+---
+
+## ⚙️ Instalasi & Konfigurasi Lokal
+
+1.  **Clone repository ini:**
+    ```bash
+    git clone [https://github.com/syalwa/pendaftaran-backend.git](https://github.com/syalwa/pendaftaran-backend.git)
+    cd pendaftaran-backend
+    ```
+
+2.  **Siapkan file environment:**
+    Buat file `.env` di direktori utama dan isi dengan format berikut:
+    ```env
+    # Ambil dari MongoDB Atlas (klik Connect -> Drivers)
+    MONGO_URI="mongodb+srv://<user>:<password>@<cluster-url>/<db-name>?retryWrites=true&w=majority"
+    MONGO_DATABASE="himatif_db"
+
+    # Kunci rahasia untuk Paseto (HARUS 32 karakter)
+    PASETO_SECRET_KEY="R4nd0mS3cr3tK3yF0rP4s3t0Appl1c4t"
+
+    # Port untuk server backend
+    SERVER_PORT=":8080"
+    
+    # Kredensial dari akun Cloudinary Anda
+    CLOUDINARY_CLOUD_NAME="<your_cloud_name>"
+    CLOUDINARY_API_KEY="<your_api_key>"
+    CLOUDINARY_API_SECRET="<your_api_secret>"
+    ```
+
+3.  **Instal dependensi:**
+    ```bash
+    go mod tidy
+    ```
+
+4.  **Jalankan server:**
+    ```bash
+    go run ./main.go
+    ```
+    Server akan berjalan di `http://localhost:8080`.
+
+---
+
+## 📝 Endpoint API
+
+### Otentikasi
+- `POST /register`: Mendaftarkan user baru.
+- `POST /login`: Login user dan mendapatkan token Paseto.
+
+### Pengguna (Memerlukan Token)
+- `GET /api/user/profile`: Mendapatkan detail profil user yang sedang login.
+- `POST /api/user/registration`: Mengirimkan formulir pendaftaran (termasuk upload CV & sertifikat).
+- `GET /api/user/my-registration`: Mendapatkan status pendaftaran user yang sedang login.
+- `GET /api/info`: Mendapatkan semua informasi/pengumuman terbaru.
+
+### Admin (Memerlukan Token & Role Admin)
+- `GET /api/admin/registrations-with-details`: Mendapatkan daftar semua pendaftar beserta detailnya.
+- `GET /api/admin/users`: Mendapatkan daftar semua pengguna terdaftar.
+- `PATCH /api/admin/registrations/{id}`: Memperbarui detail pendaftaran (status, jadwal wawancara, dll).
+- `PATCH /api/admin/registrations/bulk-update`: Memperbarui status beberapa pendaftar sekaligus.
+- `DELETE /api/admin/registrations/{id}`: Menghapus data pendaftaran.
+- `POST /api/admin/info`: Membuat informasi/pengumuman baru.
+- `PUT /api/admin/info/{id}`: Memperbarui informasi yang sudah ada.
+- `DELETE /api/admin/info/{id}`: Menghapus informasi.
+
+---
