@@ -33,8 +33,8 @@ func main() {
 
 	// Setup CORS (Cross-Origin Resource Sharing)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5500", "http://127.0.0.1:5500"},   // Sesuaikan dengan alamat frontend Anda
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"}, // TAMBAHKAN PATCH
+		AllowedOrigins:   []string{"http://localhost:5500", "http://127.0.0.1:5500", "http://127.0.0.1:5501", "http://localhost:5501"}, // Sesuaikan dengan alamat frontend Anda
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},                                                 // TAMBAHKAN PATCH
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
@@ -70,7 +70,7 @@ func main() {
 			r.Get("/registrations-with-details", handler.GetAllRegistrationsDetailHandler)
 			// r.Patch("/registrations/{id}/status", handler.UpdateRegistrationStatusHandler)
 			r.Patch("/registrations/{id}", handler.UpdateRegistrationDetailsHandler)
-			r.Patch("/registrations/bulk-update", handler.BulkUpdateStatusHandler) 
+			r.Patch("/registrations/bulk-update", handler.BulkUpdateStatusHandler)
 			r.Get("/users", handler.GetAllUsersHandler)
 			r.Delete("/registrations/{id}", handler.DeleteRegistrationHandler)
 			r.Post("/info", handler.CreateInfoHandler)
