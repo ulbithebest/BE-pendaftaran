@@ -26,7 +26,7 @@ jobs:
         run: 'gcloud info'
       - name: 'Deploy a gen 2 cloud function'
         run: |
-          gcloud functions deploy be-pendaftaran \
+          gcloud functions deploy ProjectSmZ \
             --region=asia-southeast2 \
             --allow-unauthenticated \
             --entry-point=WebHook \
@@ -36,8 +36,8 @@ jobs:
             --timeout=540s \
             --set-env-vars MONGOSTRING='${{ secrets.MONGOSTRING }}'
       - name: 'Cek eksistensi fungsi'
-        run: 'gcloud functions describe be-pendaftaran --region=asia-southeast2'
+        run: 'gcloud functions describe ProjectSmZ --region=asia-southeast2'
       - name: 'Cek log debugging'
-        run: 'gcloud functions logs read be-pendaftaran --region=asia-southeast2'
+        run: 'gcloud functions logs read ProjectSmZ --region=asia-southeast2'
       - name: 'Cleaning Artifact Registry'
         run: 'gcloud artifacts repositories delete gcf-artifacts --location=asia-southeast2 --quiet'
