@@ -32,7 +32,6 @@ jobs:
             --entry-point=Pendaftaran \
             --gen2 \
             --runtime=go123 \
-            --source=. \
             --trigger-http \
             --timeout=540s \
             --set-env-vars MONGO_URI='${{ secrets.MONGO_URI }}' \

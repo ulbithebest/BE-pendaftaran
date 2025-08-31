@@ -47,7 +47,7 @@ func CreateInfoHandler(w http.ResponseWriter, r *http.Request) {
 // GetAllInfoHandler (Untuk semua user yang login)
 func GetAllInfoHandler(w http.ResponseWriter, r *http.Request) {
 	collection := repository.MongoClient.Database(config.GetConfig().DatabaseName).Collection(infoCollection)
-	
+
 	// Urutkan berdasarkan yang terbaru
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
 

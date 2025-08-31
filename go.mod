@@ -1,4 +1,4 @@
-module github.com/ulbithebest/BE-pendaftaran
+module function
 
 go 1.23.4
 
@@ -8,6 +8,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/cors v1.2.2
 	github.com/o1egl/paseto/v2 v2.1.1
+	github.com/ulbithebest/BE-pendaftaran v0.0.0-20250831155300-8ed50bb34641
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.41.0
 )

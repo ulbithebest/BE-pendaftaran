@@ -3,6 +3,7 @@
 # Local development files
 run/
 run/**
+main.go
 .env
 .env.local
 

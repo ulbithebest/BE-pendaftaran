@@ -52,7 +52,7 @@ func GetConfigCredentials() (map[string]string, error) {
 	}
 
 	credentials := make(map[string]string)
-	
+
 	// Map struct fields to credential keys
 	if config.CloudinaryAPIKey != "" {
 		credentials["CLOUDINARY_API_KEY"] = config.CloudinaryAPIKey

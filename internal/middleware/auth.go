@@ -9,6 +9,7 @@ import (
 )
 
 type PasetoPayloadKey string
+
 const payloadKey PasetoPayloadKey = "pasetoPayload"
 
 func AuthMiddleware(next http.Handler) http.Handler {
