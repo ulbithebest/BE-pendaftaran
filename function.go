@@ -1,6 +1,4 @@
-// Package function defines the Cloud Function entry point
-// This file is designed for Google Cloud Functions Gen 2
-package function
+package pendaftaran
 
 import (
 	"log"
@@ -16,6 +14,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+
+	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 )
 
 // Global router instance
@@ -118,9 +118,8 @@ func initializeApp() {
 	log.Println("✅ Router initialized successfully")
 }
 
-// Pendaftaran is the main Cloud Function entry point
-// This function name must match the --entry-point in gcloud deploy
-func Pendaftaran(w http.ResponseWriter, r *http.Request) {
+// URL handles all HTTP requests - same pattern as your successful example
+func URL(w http.ResponseWriter, r *http.Request) {
 	// Initialize app only once using sync.Once
 	once.Do(initializeApp)
 
@@ -133,4 +132,8 @@ func Pendaftaran(w http.ResponseWriter, r *http.Request) {
 
 	// Serve the request
 	router.ServeHTTP(w, r)
+}
+
+func init() {
+	functions.HTTP("Pendaftaran", URL)
 }
