@@ -8,6 +8,7 @@ run/
 # Documentation
 docs/
 README.md
+*.md
 
 # Git files
 .git/
@@ -37,3 +38,6 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Local uploads directory
+uploads/

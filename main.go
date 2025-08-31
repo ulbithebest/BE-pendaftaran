@@ -1,4 +1,5 @@
 // Package main defines the Cloud Function entry point
+// This file is designed for Google Cloud Functions Gen 2
 package main
 
 import (
@@ -132,4 +133,11 @@ func Pendaftaran(w http.ResponseWriter, r *http.Request) {
 
 	// Serve the request
 	router.ServeHTTP(w, r)
+}
+
+// main function is required for Go modules but will not be used in Cloud Functions
+func main() {
+	// This function will not be called in Cloud Functions
+	// Entry point is the Pendaftaran function above
+	log.Println("This main function should not run in Cloud Functions")
 }
