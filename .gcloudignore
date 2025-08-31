@@ -2,6 +2,7 @@
 
 # Local development files
 run/
+run/**
 .env
 .env.local
 
