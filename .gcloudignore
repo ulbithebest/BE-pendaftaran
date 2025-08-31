@@ -1,0 +1,39 @@
+# Gcloudignore file for Cloud Functions deployment
+
+# Local development files
+run/
+.env
+.env.local
+
+# Documentation
+docs/
+README.md
+
+# Git files
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/

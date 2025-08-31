@@ -1,12 +1,12 @@
+// Package main defines the Cloud Function entry point
 package main
 
 import (
 	"log"
 	"net/http"
+	"os"
+	"sync"
 
-	// "strings"
-
-	// Pastikan path import ini sesuai dengan nama modul di go.mod Anda
 	"github.com/ulbithebest/BE-pendaftaran/internal/config"
 	"github.com/ulbithebest/BE-pendaftaran/internal/handler"
 	"github.com/ulbithebest/BE-pendaftaran/internal/middleware"
@@ -17,58 +17,91 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func main() {
-	// 1. Muat Konfigurasi dari file .env
+// Global router instance
+var (
+	router *chi.Mux
+	once   sync.Once
+)
+
+// initializeApp initializes the application router and database connection
+func initializeApp() {
+	log.Println("🚀 Initializing Cloud Function...")
+
+	// 1. Load basic configuration (MONGO_URI, MONGO_DATABASE, SERVER_PORT)
 	cfg := config.GetConfig()
+	log.Printf("✅ Basic config loaded - DB: %s, Port: %s", cfg.DatabaseName, cfg.ServerPort)
 
-	// 2. Hubungkan ke Database MongoDB
+	// 2. Connect to MongoDB
 	repository.ConnectDB(cfg)
+	log.Println("✅ Database connected")
 
-	// 3. Inisialisasi Router menggunakan Chi
+	// 3. Load credentials from database himatif.configurasi
+	credentials, err := repository.GetConfigCredentials()
+	if err != nil {
+		log.Printf("⚠️ Warning: Failed to load credentials from database: %v", err)
+		log.Println("Will proceed with environment variables as fallback")
+		credentials = make(map[string]string) // Empty map for fallback
+	}
+
+	// 4. Load database credentials into config
+	config.LoadDatabaseCredentials(credentials)
+
+	// 5. Initialize Chi router
 	r := chi.NewRouter()
 
-	// 4. Setup Middleware Global
-	r.Use(chiMiddleware.Logger)    // Middleware untuk mencatat (log) setiap request yang masuk
-	r.Use(chiMiddleware.Recoverer) // Middleware untuk menangani panic dan menjaga server tetap hidup
+	// 6. Setup global middleware
+	r.Use(chiMiddleware.Logger)
+	r.Use(chiMiddleware.Recoverer)
+	r.Use(chiMiddleware.RealIP)
 
-	// Setup CORS (Cross-Origin Resource Sharing)
-	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5500", "http://127.0.0.1:5500", "http://127.0.0.1:5501", "http://localhost:5501"}, // Sesuaikan dengan alamat frontend Anda
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},                                                 // TAMBAHKAN PATCH
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+	// 7. Setup CORS - configured for production
+	corsOptions := cors.Options{
+		AllowedOrigins: []string{
+			"https://svalvva.github.io", // GitHub Pages frontend
+			"http://localhost:5500",     // Local development
+			"http://127.0.0.1:5500",
+			"http://127.0.0.1:5501",
+			"http://localhost:5501",
+		},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
-	}))
+	}
+	r.Use(cors.Handler(corsOptions))
 
-	// 5. Definisikan Routes (Endpoint API)
+	// 6. Health check endpoint
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"healthy","service":"pendaftaran-api"}`))
+	})
 
-	// Routes publik yang bisa diakses tanpa login/token
+	// 7. Public routes (no authentication required)
 	r.Post("/register", handler.RegisterHandler)
 	r.Post("/login", handler.LoginHandler)
 
-	// Group routes yang memerlukan otentikasi (wajib ada token Paseto)
+	// 8. Protected routes
 	r.Route("/api", func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware) // Semua di dalam grup ini akan dilindungi oleh middleware otentikasi
+		r.Use(middleware.AuthMiddleware)
 
-		// --- Routes untuk user biasa ---
+		// User endpoints
 		r.Get("/user/profile", handler.GetUserProfileHandler)
 		r.Post("/user/registration", handler.SubmitRegistrationHandler)
 		r.Get("/user/my-registration", handler.GetUserRegistrationHandler)
 		r.Get("/info", handler.GetAllInfoHandler)
 
-		// --- TAMBAHAN: File Server untuk CV (dilindungi otentikasi) ---
-		// Ini akan membuat file di folder /uploads bisa diakses via URL
-		fileServer := http.FileServer(http.Dir("./uploads"))
-		r.Handle("/uploads/*", http.StripPrefix("/api/uploads/", fileServer))
+		// File server for uploads (protected)
+		if _, err := os.Stat("./uploads"); err == nil {
+			fileServer := http.FileServer(http.Dir("./uploads"))
+			r.Handle("/uploads/*", http.StripPrefix("/api/uploads/", fileServer))
+		}
 
-		// --- Routes khusus admin ---
+		// Admin-only routes
 		r.Route("/admin", func(r chi.Router) {
-			r.Use(middleware.AdminOnlyMiddleware) // Perlindungan tambahan, hanya untuk admin
+			r.Use(middleware.AdminOnlyMiddleware)
 
-			// --- PERUBAHAN ENDPOINT ADMIN ---
 			r.Get("/registrations-with-details", handler.GetAllRegistrationsDetailHandler)
-			// r.Patch("/registrations/{id}/status", handler.UpdateRegistrationStatusHandler)
 			r.Patch("/registrations/{id}", handler.UpdateRegistrationDetailsHandler)
 			r.Patch("/registrations/bulk-update", handler.BulkUpdateStatusHandler)
 			r.Get("/users", handler.GetAllUsersHandler)
@@ -79,9 +112,24 @@ func main() {
 		})
 	})
 
-	// 6. Jalankan Server HTTP
-	log.Printf("✅ Server starting on port %s", cfg.ServerPort)
-	if err := http.ListenAndServe(cfg.ServerPort, r); err != nil {
-		log.Fatalf("❌ Failed to start server: %v", err)
+	// Assign to global variable
+	router = r
+	log.Println("✅ Router initialized successfully")
+}
+
+// Pendaftaran is the main Cloud Function entry point
+// This function name must match the --entry-point in gcloud deploy
+func Pendaftaran(w http.ResponseWriter, r *http.Request) {
+	// Initialize app only once using sync.Once
+	once.Do(initializeApp)
+
+	// Handle the request
+	if router == nil {
+		log.Println("❌ Router not initialized")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
+
+	// Serve the request
+	router.ServeHTTP(w, r)
 }

@@ -57,3 +57,13 @@ type Information struct {
 	CreatedAt primitive.DateTime `bson:"created_at" json:"created_at"`
 	UpdatedAt primitive.DateTime `bson:"updated_at" json:"updated_at"`
 }
+
+// ConfigCredential sesuai dengan koleksi 'configurasi' di database 'himatif'
+type ConfigCredential struct {
+	ID                    primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	CloudinaryAPIKey      string             `bson:"CLOUDINARY_API_KEY,omitempty" json:"cloudinary_api_key,omitempty"`
+	CloudinaryAPISecret   string             `bson:"CLOUDINARY_API_SECRET,omitempty" json:"cloudinary_api_secret,omitempty"`
+	CloudinaryCloudName   string             `bson:"CLOUDINARY_CLOUD_NAME,omitempty" json:"cloudinary_cloud_name,omitempty"`
+	PasetoSecretKey       string             `bson:"PASETO_SECRET_KEY,omitempty" json:"paseto_secret_key,omitempty"`
+	ServerPort            string             `bson:"SERVER_PORT,omitempty" json:"server_port,omitempty"`
+}

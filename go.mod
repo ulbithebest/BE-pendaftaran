@@ -5,7 +5,6 @@ go 1.23.4
 require (
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/cors v1.2.2
-	github.com/joho/godotenv v1.5.1
 	github.com/o1egl/paseto/v2 v2.1.1
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.41.0
