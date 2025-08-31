@@ -1,5 +1,5 @@
 // Package main defines the Cloud Function entry point
-// This file is designed for Google Cloud Functions Gen 2
+// This file is designed for Google Cloud Functions Gen 2 with Functions Framework
 package main
 
 import (
@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/GoogleCloudPlatform/functions-framework-go/funcframework"
 	"github.com/ulbithebest/BE-pendaftaran/internal/config"
 	"github.com/ulbithebest/BE-pendaftaran/internal/handler"
 	"github.com/ulbithebest/BE-pendaftaran/internal/middleware"
@@ -135,9 +136,20 @@ func Pendaftaran(w http.ResponseWriter, r *http.Request) {
 	router.ServeHTTP(w, r)
 }
 
-// main function is required for Go modules but will not be used in Cloud Functions
+func init() {
+	// Register the Cloud Function
+	funcframework.RegisterHTTPFunction("/", Pendaftaran)
+}
+
+// main function for Functions Framework
 func main() {
-	// This function will not be called in Cloud Functions
-	// Entry point is the Pendaftaran function above
-	log.Println("This main function should not run in Cloud Functions")
+	// Use PORT environment variable, or default to 8080
+	port := "8080"
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		port = envPort
+	}
+	
+	if err := funcframework.Start(port); err != nil {
+		log.Fatalf("funcframework.Start: %v\n", err)
+	}
 }
