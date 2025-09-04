@@ -3,6 +3,8 @@ package config
 import (
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 // Config menampung semua variabel konfigurasi aplikasi
@@ -26,29 +28,23 @@ func getEnvWithDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
-// LoadConfig memuat konfigurasi dari environment variables sistem
+// LoadConfig memuat konfigurasi dari file .env dan environment variables
 func LoadConfig() {
-	log.Println("🔧 Loading configuration from system environment variables...")
-
-	// Debug: print semua environment variables yang relevan
-	mongoURI := getEnvWithDefault("MONGO_URI", "")
-	mongoDatabase := getEnvWithDefault("MONGO_DATABASE", "pendaftaran_db")
-	serverPort := getEnvWithDefault("SERVER_PORT", ":8080")
-
-	log.Printf("🔍 Debug - MONGO_URI length: %d", len(mongoURI))
-	log.Printf("🔍 Debug - MONGO_DATABASE: %s", mongoDatabase)
-	log.Printf("🔍 Debug - SERVER_PORT: %s", serverPort)
+	// Coba load .env file (untuk development lokal)
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using environment variables from system")
+	}
 
 	// Load basic config yang diperlukan untuk koneksi database
 	appConfig = &Config{
-		MongoURI:     mongoURI,
-		DatabaseName: mongoDatabase,
-		ServerPort:   serverPort,
+		MongoURI:     getEnvWithDefault("MONGO_URI", ""),
+		DatabaseName: getEnvWithDefault("MONGO_DATABASE", "himatif"),
+		ServerPort:   getEnvWithDefault("SERVER_PORT", ":8080"),
 	}
 
 	// Validasi konfigurasi penting untuk koneksi database
 	if appConfig.MongoURI == "" {
-		log.Fatal("❌ MONGO_URI is required - please set environment variable MONGO_URI")
+		log.Fatal("MONGO_URI is required")
 	}
 
 	log.Println("✅ Basic configuration loaded successfully")
@@ -81,17 +77,15 @@ func LoadDatabaseCredentials(credentials map[string]string) {
 func getCredentialWithFallback(credentials map[string]string, key, defaultValue string) string {
 	// Coba ambil dari database terlebih dahulu
 	if value, exists := credentials[key]; exists && value != "" {
-		log.Printf("✅ Using credential %s from database", key)
 		return value
 	}
-	
-	// Fallback ke environment variable (untuk backward compatibility)
+
+	// Fallback ke environment variable
 	if envValue := os.Getenv(key); envValue != "" {
-		log.Printf("⚠️ Warning: Using environment variable for %s (not found in database)", key)
+		log.Printf("Warning: Using environment variable for %s (not found in database)", key)
 		return envValue
 	}
-	
-	log.Printf("❌ Credential %s not found in database or environment", key)
+
 	return defaultValue
 }
 
