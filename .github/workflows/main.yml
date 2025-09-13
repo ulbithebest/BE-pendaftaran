@@ -37,7 +37,7 @@ jobs:
             --set-env-vars MONGO_URI='${{ secrets.MONGO_URI }}' \
             --set-env-vars MONGO_DATABASE='${{ secrets.MONGO_DATABASE }}' \
             --set-env-vars SERVER_PORT='8080' \
-            --build-env-vars=GOFLAGS=-buildvcs=false
+            --set-build-env-vars GOFLAGS=-buildvcs=false
       - name: "Cek eksistensi fungsi"
         run: "gcloud functions describe ProjectSmZ --region=asia-southeast2"
       - name: "Cek log debugging"
