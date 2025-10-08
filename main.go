@@ -31,15 +31,24 @@ func main() {
 	r.Use(chiMiddleware.Logger)    // Middleware untuk mencatat (log) setiap request yang masuk
 	r.Use(chiMiddleware.Recoverer) // Middleware untuk menangani panic dan menjaga server tetap hidup
 
-	// Setup CORS (Cross-Origin Resource Sharing)
-	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5500", "http://127.0.0.1:5500", "http://127.0.0.1:5501", "http://localhost:5501"}, // Sesuaikan dengan alamat frontend Anda
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},                                                 // TAMBAHKAN PATCH
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+	// 7. Setup CORS - configured for production
+	corsOptions := cors.Options{
+		AllowedOrigins: []string{
+			"https://ulbithebest.github.io/", // GitHub Pages frontend
+			"http://localhost:5500",    // Local development
+			"http://127.0.0.1:5500",
+			"http://127.0.0.1:5501",
+			"http://localhost:5501",
+		},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
-	}))
+	}
+
+	r.Use(cors.Handler(corsOptions))
+
 
 	// 5. Definisikan Routes (Endpoint API)
 
