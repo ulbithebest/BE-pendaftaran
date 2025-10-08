@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
-	
+
 	"github.com/go-chi/chi/v5"
 	"github.com/ulbithebest/BE-pendaftaran/internal/config"
 	"github.com/ulbithebest/BE-pendaftaran/internal/model" // <-- PERBAIKAN 1: Tambahkan import model
@@ -79,10 +79,9 @@ func UpdateRegistrationDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if payload.InterviewLocation != "" {
 		updateFields["interview_location"] = payload.InterviewLocation
 	}
-	
 
 	updateFields["updated_at"] = primitive.NewDateTimeFromTime(time.Now())
-	
+
 	update := bson.M{"$set": updateFields}
 
 	_, err = collection.UpdateOne(context.TODO(), bson.M{"_id": regID}, update)
@@ -97,59 +96,58 @@ func UpdateRegistrationDetailsHandler(w http.ResponseWriter, r *http.Request) {
 
 // FITUR BARU: Handler untuk update status beberapa pendaftar sekaligus
 func BulkUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
-    var payload struct {
-        IDs    []string `json:"ids"`
-        Status string   `json:"status"`
-    }
+	var payload struct {
+		IDs    []string `json:"ids"`
+		Status string   `json:"status"`
+	}
 
-    if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-        http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
-        return
-    }
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		return
+	}
 
-    if len(payload.IDs) == 0 {
-        http.Error(w, `{"error": "No registration IDs provided"}`, http.StatusBadRequest)
-        return
-    }
+	if len(payload.IDs) == 0 {
+		http.Error(w, `{"error": "No registration IDs provided"}`, http.StatusBadRequest)
+		return
+	}
 
-    // Konversi string IDs menjadi BSON ObjectIDs
-    var objectIDs []primitive.ObjectID
-    for _, idStr := range payload.IDs {
-        id, err := primitive.ObjectIDFromHex(idStr)
-        if err != nil {
-            http.Error(w, `{"error": "Invalid ID format in list"}`, http.StatusBadRequest)
-            return
-        }
-        objectIDs = append(objectIDs, id)
-    }
+	// Konversi string IDs menjadi BSON ObjectIDs
+	var objectIDs []primitive.ObjectID
+	for _, idStr := range payload.IDs {
+		id, err := primitive.ObjectIDFromHex(idStr)
+		if err != nil {
+			http.Error(w, `{"error": "Invalid ID format in list"}`, http.StatusBadRequest)
+			return
+		}
+		objectIDs = append(objectIDs, id)
+	}
 
-    collection := repository.MongoClient.Database(config.GetConfig().DatabaseName).Collection("registrations")
-    
-    // Filter untuk mencari semua dokumen dengan ID yang ada di dalam array
-    filter := bson.M{"_id": bson.M{"$in": objectIDs}}
-    
-    // Data yang akan di-update
-    update := bson.M{
-        "$set": bson.M{
-            "status":     payload.Status,
-            "updated_at": primitive.NewDateTimeFromTime(time.Now()),
-        },
-    }
+	collection := repository.MongoClient.Database(config.GetConfig().DatabaseName).Collection("registrations")
 
-    // Lakukan operasi UpdateMany
-    result, err := collection.UpdateMany(context.TODO(), filter, update)
-    if err != nil {
-        http.Error(w, `{"error": "Failed to bulk update registrations"}`, http.StatusInternalServerError)
-        return
-    }
+	// Filter untuk mencari semua dokumen dengan ID yang ada di dalam array
+	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]interface{}{
-        "message":      "Bulk update successful",
-        "updatedCount": result.ModifiedCount,
-    })
+	// Data yang akan di-update
+	update := bson.M{
+		"$set": bson.M{
+			"status":     payload.Status,
+			"updated_at": primitive.NewDateTimeFromTime(time.Now()),
+		},
+	}
+
+	// Lakukan operasi UpdateMany
+	result, err := collection.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		http.Error(w, `{"error": "Failed to bulk update registrations"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":      "Bulk update successful",
+		"updatedCount": result.ModifiedCount,
+	})
 }
-
 
 func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	collection := repository.MongoClient.Database(config.GetConfig().DatabaseName).Collection("users")

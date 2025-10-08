@@ -18,24 +18,45 @@ import (
 )
 
 func main() {
-	// 1. Muat Konfigurasi dari file .env
+	// 1. Load basic configuration (MONGO_URI, MONGO_DATABASE, SERVER_PORT)
 	cfg := config.GetConfig()
+	log.Printf("✅ Basic config loaded - DB: %s, Port: %s", cfg.DatabaseName, cfg.ServerPort)
 
-	// 2. Hubungkan ke Database MongoDB
+	// 2. Connect to MongoDB
 	repository.ConnectDB(cfg)
+	log.Println("✅ Database connected")
 
-	// 3. Inisialisasi Router menggunakan Chi
+	// 3. Load credentials from database himatif.configurasi
+	credentials, err := repository.GetConfigCredentials()
+	if err != nil {
+		log.Printf("⚠️ Warning: Failed to load credentials from database: %v", err)
+		log.Println("Will proceed with environment variables as fallback")
+		credentials = make(map[string]string) // Empty map for fallback
+	}
+
+	// 4. Load database credentials into config
+	config.LoadDatabaseCredentials(credentials)
+
+	// 5. Initialize Chi router
 	r := chi.NewRouter()
 
-	// 4. Setup Middleware Global
+	// 6. Setup Middleware Global
 	r.Use(chiMiddleware.Logger)    // Middleware untuk mencatat (log) setiap request yang masuk
 	r.Use(chiMiddleware.Recoverer) // Middleware untuk menangani panic dan menjaga server tetap hidup
 
+<<<<<<< HEAD:main.go
 	// 7. Setup CORS - configured for production
 	corsOptions := cors.Options{
 		AllowedOrigins: []string{
 			"https://ulbithebest.github.io/", // GitHub Pages frontend
 			"http://localhost:5500",    // Local development
+=======
+	// 7. Setup CORS (Cross-Origin Resource Sharing)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{
+			"https://svalvva.github.io", // GitHub Pages frontend
+			"http://localhost:5500",     // Local development
+>>>>>>> c323e99d0949fd2e7234bcf4a0eddb9c3a91bd87:run/main.go
 			"http://127.0.0.1:5500",
 			"http://127.0.0.1:5501",
 			"http://localhost:5501",
@@ -50,7 +71,7 @@ func main() {
 	r.Use(cors.Handler(corsOptions))
 
 
-	// 5. Definisikan Routes (Endpoint API)
+	// 8. Define Routes (API Endpoints)
 
 	// Routes publik yang bisa diakses tanpa login/token
 	r.Post("/register", handler.RegisterHandler)
@@ -88,7 +109,7 @@ func main() {
 		})
 	})
 
-	// 6. Jalankan Server HTTP
+	// 9. Start HTTP Server
 	log.Printf("✅ Server starting on port %s", cfg.ServerPort)
 	if err := http.ListenAndServe(cfg.ServerPort, r); err != nil {
 		log.Fatalf("❌ Failed to start server: %v", err)

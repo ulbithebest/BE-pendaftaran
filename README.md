@@ -7,6 +7,7 @@
 
 Selamat datang di layanan backend untuk Aplikasi Pendaftaran Anggota Baru HIMATIF! Dibuat dengan Go, layanan ini menyediakan REST API yang tangguh dan aman untuk mengelola seluruh alur pendaftaran, mulai dari otentikasi pengguna hingga manajemen file di *cloud*.
 
+
 ---
 
 ## ✨ Fitur Unggulan
@@ -36,7 +37,7 @@ Selamat datang di layanan backend untuk Aplikasi Pendaftaran Anggota Baru HIMATI
 
 1.  **Clone repository ini:**
     ```bash
-    git clone [https://github.com/syalwa/pendaftaran-backend.git](https://github.com/syalwa/pendaftaran-backend.git)
+    git clone [https://github.com/ulbithebest/FE-pendaftaran.git](https://github.com/ulbithebest/FE-pendaftaran.git)
     cd pendaftaran-backend
     ```
 
