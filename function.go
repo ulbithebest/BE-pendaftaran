@@ -58,8 +58,8 @@ func initializeApp() {
 	// 7. Setup CORS - configured for production
 	corsOptions := cors.Options{
 		AllowedOrigins: []string{
-			"https://svalvva.github.io", // GitHub Pages frontend
-			"http://localhost:5500",     // Local development
+			"https://ulbithebest.github.io", // GitHub Pages frontend
+			"http://localhost:5500",    // Local development
 			"http://127.0.0.1:5500",
 			"http://127.0.0.1:5501",
 			"http://localhost:5501",
@@ -70,6 +70,7 @@ func initializeApp() {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}
+
 	r.Use(cors.Handler(corsOptions))
 
 	// 6. Health check endpoint
