@@ -28,38 +28,36 @@ var (
 func initializeApp() {
 	log.Println("🚀 Initializing Cloud Function...")
 
-	// 1. Load basic configuration (MONGO_URI, MONGO_DATABASE, SERVER_PORT)
+	// 1. Load configuration (MONGO_URI, MONGO_DATABASE, etc)
 	cfg := config.GetConfig()
-	log.Printf("✅ Basic config loaded - DB: %s, Port: %s", cfg.DatabaseName, cfg.ServerPort)
+	log.Printf("✅ Config loaded - DB: %s, Port: %s", cfg.DatabaseName, cfg.ServerPort)
 
 	// 2. Connect to MongoDB
 	repository.ConnectDB(cfg)
 	log.Println("✅ Database connected")
 
-	// 3. Load credentials from database himatif.configurasi
+	// 3. Load credentials from database
 	credentials, err := repository.GetConfigCredentials()
 	if err != nil {
-		log.Printf("⚠️ Warning: Failed to load credentials from database: %v", err)
-		log.Println("Will proceed with environment variables as fallback")
-		credentials = make(map[string]string) // Empty map for fallback
+		log.Printf("⚠️ Failed to load credentials from DB: %v", err)
+		log.Println("Fallback to environment variables")
+		credentials = make(map[string]string)
 	}
-
-	// 4. Load database credentials into config
 	config.LoadDatabaseCredentials(credentials)
 
-	// 5. Initialize Chi router
+	// 4. Setup Chi router
 	r := chi.NewRouter()
 
-	// 6. Setup global middleware
+	// 5. Global middlewares
 	r.Use(chiMiddleware.Logger)
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(chiMiddleware.RealIP)
 
-	// 7. Setup CORS - configured for production
+	// 6. Setup CORS
 	corsOptions := cors.Options{
 		AllowedOrigins: []string{
 			"https://ulbithebest.github.io", // GitHub Pages frontend
-			"http://localhost:5500",    // Local development
+			"http://localhost:5500",         // Local dev
 			"http://127.0.0.1:5500",
 			"http://127.0.0.1:5501",
 			"http://localhost:5501",
@@ -70,20 +68,19 @@ func initializeApp() {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}
-
 	r.Use(cors.Handler(corsOptions))
 
-	// 6. Health check endpoint
+	// 7. Health check
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"healthy","service":"pendaftaran-api"}`))
 	})
 
-	// 7. Public routes (no authentication required)
+	// 8. Public routes
 	r.Post("/register", handler.RegisterHandler)
 	r.Post("/login", handler.LoginHandler)
 
-	// 8. Protected routes
+	// 9. Protected routes
 	r.Route("/api", func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware)
 
@@ -93,7 +90,7 @@ func initializeApp() {
 		r.Get("/user/my-registration", handler.GetUserRegistrationHandler)
 		r.Get("/info", handler.GetAllInfoHandler)
 
-		// File server for uploads (protected)
+		// File server (protected)
 		if _, err := os.Stat("./uploads"); err == nil {
 			fileServer := http.FileServer(http.Dir("./uploads"))
 			r.Handle("/uploads/*", http.StripPrefix("/api/uploads/", fileServer))
@@ -114,24 +111,33 @@ func initializeApp() {
 		})
 	})
 
-	// Assign to global variable
 	router = r
 	log.Println("✅ Router initialized successfully")
 }
 
-// URL handles all HTTP requests - same pattern as your successful example
+// URL handles all HTTP requests - entry point for Cloud Function
 func URL(w http.ResponseWriter, r *http.Request) {
-	// Initialize app only once using sync.Once
+	// Initialize only once
 	once.Do(initializeApp)
 
-	// Handle the request
+	// Handle preflight (OPTIONS) manually to ensure Cloud Functions compatibility
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Origin", "https://ulbithebest.github.io")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token, X-Requested-With")
+		w.Header().Set("Access-Control-Max-Age", "300")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	// Ensure router exists
 	if router == nil {
 		log.Println("❌ Router not initialized")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	// Serve the request
+	// Forward request to Chi router
 	router.ServeHTTP(w, r)
 }
 
