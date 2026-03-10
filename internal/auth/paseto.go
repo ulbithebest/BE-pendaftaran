@@ -3,6 +3,8 @@ package auth
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/o1egl/paseto/v2"
@@ -37,17 +39,24 @@ func GenerateToken(userID primitive.ObjectID, nim, role string) (string, error) 
 	// PERBAIKAN DI SINI: Panggil .Set() secara langsung
 	jsonToken.Set("role", role)
 
-	key := []byte(cfg.PasetoSecretKey)
+	key, err := getPasetoKey(cfg.PasetoSecretKey)
+	if err != nil {
+		return "", err
+	}
+
 	return paseto.NewV2().Encrypt(key, jsonToken, nil)
 }
 
 // VerifyToken memverifikasi token Paseto (VERSI BARU)
 func VerifyToken(tokenString string) (*PasetoPayload, error) {
 	cfg := config.GetConfig()
-	key := []byte(cfg.PasetoSecretKey)
+	key, err := getPasetoKey(cfg.PasetoSecretKey)
+	if err != nil {
+		return nil, errors.New("invalid token")
+	}
 
 	var jsonToken paseto.JSONToken
-	err := paseto.NewV2().Decrypt(tokenString, key, &jsonToken, nil)
+	err = paseto.NewV2().Decrypt(tokenString, key, &jsonToken, nil)
 	if err != nil {
 		return nil, errors.New("invalid token")
 	}
@@ -78,4 +87,13 @@ func VerifyToken(tokenString string) (*PasetoPayload, error) {
 	}
 
 	return payload, nil
+}
+
+func getPasetoKey(secret string) ([]byte, error) {
+	trimmed := strings.TrimSpace(secret)
+	if len(trimmed) != 32 {
+		return nil, fmt.Errorf("PASETO_SECRET_KEY must be exactly 32 characters, got %d", len(trimmed))
+	}
+
+	return []byte(trimmed), nil
 }

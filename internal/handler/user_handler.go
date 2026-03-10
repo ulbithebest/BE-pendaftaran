@@ -94,6 +94,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	token, err := auth.GenerateToken(user.ID, user.NIM, user.Role)
 	if err != nil {
+		log.Printf("token generation failed for NIM %s: %v", user.NIM, err)
 		http.Error(w, `{"error": "Failed to generate token"}`, http.StatusInternalServerError)
 		return
 	}
