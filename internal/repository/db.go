@@ -38,6 +38,10 @@ func ConnectDB(cfg *config.Config) {
 
 // GetConfigCredentials mengambil semua credentials dari collection configurasi di database himatif
 func GetConfigCredentials() (map[string]string, error) {
+	if MongoClient == nil {
+		return nil, fmt.Errorf("MongoDB client is not connected")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -78,6 +82,10 @@ func GetConfigCredentials() (map[string]string, error) {
 
 // GetConfigCredential mengambil satu credential berdasarkan key
 func GetConfigCredential(key string) (string, error) {
+	if MongoClient == nil {
+		return "", fmt.Errorf("MongoDB client is not connected")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

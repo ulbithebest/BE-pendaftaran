@@ -44,7 +44,7 @@ func LoadConfig() {
 
 	// Validasi konfigurasi penting untuk koneksi database
 	if appConfig.MongoURI == "" {
-		log.Fatal("MONGO_URI is required")
+		log.Println("❌ MONGO_URI is required but not set")
 	}
 
 	log.Println("✅ Basic configuration loaded successfully")
@@ -53,7 +53,8 @@ func LoadConfig() {
 // LoadDatabaseCredentials memuat credentials dari database setelah koneksi terbentuk
 func LoadDatabaseCredentials(credentials map[string]string) {
 	if appConfig == nil {
-		log.Fatal("Basic config must be loaded first")
+		log.Println("❌ Basic config must be loaded first")
+		return
 	}
 
 	// Load credentials dari database dengan fallback ke environment variables
@@ -64,7 +65,7 @@ func LoadDatabaseCredentials(credentials map[string]string) {
 
 	// Validasi credentials yang wajib ada
 	if appConfig.PasetoSecretKey == "" {
-		log.Fatal("PASETO_SECRET_KEY is required (not found in database or environment)")
+		log.Println("⚠️ PASETO_SECRET_KEY is required (not found in database or environment)")
 	}
 
 	log.Printf("✅ Database credentials loaded successfully")
