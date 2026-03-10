@@ -1,50 +1,50 @@
 package pendaftaran
 
 import (
-    "log"
-    "net/http"
-    "os"
-    "sync"
+	"log"
+	"net/http"
+	"os"
+	"sync"
 
-    "github.com/ulbithebest/BE-pendaftaran/internal/config"
-    "github.com/ulbithebest/BE-pendaftaran/internal/handler"
-    "github.com/ulbithebest/BE-pendaftaran/internal/middleware"
-    "github.com/ulbithebest/BE-pendaftaran/internal/repository"
+	"github.com/ulbithebest/BE-pendaftaran/internal/config"
+	"github.com/ulbithebest/BE-pendaftaran/internal/handler"
+	"github.com/ulbithebest/BE-pendaftaran/internal/middleware"
+	"github.com/ulbithebest/BE-pendaftaran/internal/repository"
 
-    "github.com/go-chi/chi/v5"
-    chiMiddleware "github.com/go-chi/chi/v5/middleware"
-    "github.com/go-chi/cors"
+	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 
-    "github.com/GoogleCloudPlatform/functions-framework-go/functions"
+	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 )
 
 // Global router instance
 var (
-    router *chi.Mux
-    once   sync.Once
+	router *chi.Mux
+	once   sync.Once
 )
 
 // allowlist for CORS preflight handler (manual path)
 var allowedOrigins = map[string]struct{}{
-    "https://ulbithebest.github.io": {},
-    "http://localhost:5500":         {},
-    "http://127.0.0.1:5500":         {},
-    "http://127.0.0.1:5501":         {},
-    "http://localhost:5501":         {},
+	"https://ulbithebest.github.io": {},
+	"http://localhost:5500":         {},
+	"http://127.0.0.1:5500":         {},
+	"http://127.0.0.1:5501":         {},
+	"http://localhost:5501":         {},
 }
 
 func setCORSHeaders(w http.ResponseWriter, r *http.Request) {
-    origin := r.Header.Get("Origin")
-    if _, ok := allowedOrigins[origin]; !ok {
-        return
-    }
-    // Mirror the request origin (required when credentials are used)
-    w.Header().Set("Access-Control-Allow-Origin", origin)
-    w.Header().Set("Vary", "Origin")
-    w.Header().Set("Access-Control-Allow-Credentials", "true")
-    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
-    w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token, X-Requested-With")
-    w.Header().Set("Access-Control-Max-Age", "300")
+	origin := r.Header.Get("Origin")
+	if _, ok := allowedOrigins[origin]; !ok {
+		return
+	}
+	// Mirror the request origin (required when credentials are used)
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Vary", "Origin")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token, X-Requested-With")
+	w.Header().Set("Access-Control-Max-Age", "300")
 }
 
 // initializeApp initializes the application router and database connection
@@ -140,20 +140,24 @@ func initializeApp() {
 
 // URL handles all HTTP requests - entry point for Cloud Function
 func URL(w http.ResponseWriter, r *http.Request) {
-    // Initialize only once
-    once.Do(initializeApp)
+	// Set CORS headers FIRST, before any initialization that might fail
+	setCORSHeaders(w, r)
 
-    // Handle preflight (OPTIONS) manually to ensure Cloud Functions compatibility
-    if r.Method == http.MethodOptions {
-        setCORSHeaders(w, r)
-        w.WriteHeader(http.StatusNoContent)
-        return
-    }
+	// Handle preflight (OPTIONS) immediately
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	// Initialize only once
+	once.Do(initializeApp)
 
 	// Ensure router exists
 	if router == nil {
 		log.Println("❌ Router not initialized")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error":"Internal Server Error"}`))
 		return
 	}
 

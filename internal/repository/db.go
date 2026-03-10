@@ -22,12 +22,14 @@ func ConnectDB(cfg *config.Config) {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoURI))
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		log.Printf("Failed to connect to MongoDB: %v", err)
+		return
 	}
 
 	// Ping the primary
 	if err := client.Ping(ctx, nil); err != nil {
-		log.Fatalf("Failed to ping MongoDB: %v", err)
+		log.Printf("Failed to ping MongoDB: %v", err)
+		return
 	}
 
 	MongoClient = client
