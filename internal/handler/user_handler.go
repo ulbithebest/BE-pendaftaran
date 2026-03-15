@@ -167,33 +167,61 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	// CUKUP GUNAKAN URL ASLI DARI CLOUDINARY
 	cvUrl := uploadResult.SecureURL
 
-	// 5. Proses Upload Sertifikat (Opsional)
-	certificateUrl := ""
-	certFile, _, err := r.FormFile("certificate") // Kita tidak butuh header, jadi gunakan _
-	if err == nil {
-		defer certFile.Close()
+	// 5. Proses Upload Sertifikat Morris (Wajib)
+	certFile, _, err := r.FormFile("certificate")
+	if err != nil {
+		http.Error(w, `{"error": "Sertifikat Morris wajib diunggah"}`, http.StatusBadRequest)
+		return
+	}
+	defer certFile.Close()
 
-		// Buat Public ID yang unik untuk sertifikat
-		certPublicID := fmt.Sprintf("himatif-registrations/%s_cert_%d",
-			payload.NIM,
-			time.Now().Unix())
+	// Buat Public ID yang unik untuk sertifikat
+	certPublicID := fmt.Sprintf("himatif-registrations/%s_cert_%d",
+		payload.NIM,
+		time.Now().Unix())
 
-		certUploadResult, err := cld.Upload.Upload(ctx, certFile, uploader.UploadParams{
-			PublicID:      certPublicID,
-			ResourceType:  "image",
-			Overwrite:     api.Bool(true),
-			AccessControl: []api.AccessControlRule{{AccessType: "anonymous"}},
-		})
-
-		if err != nil {
-			log.Println("Warning: failed to upload certificate, but proceeding without it.", err)
-		} else {
-			// CUKUP GUNAKAN URL ASLI DARI CLOUDINARY
-			certificateUrl = certUploadResult.SecureURL
-		}
+	certUploadResult, err := cld.Upload.Upload(ctx, certFile, uploader.UploadParams{
+		PublicID:      certPublicID,
+		ResourceType:  "image",
+		Overwrite:     api.Bool(true),
+		AccessControl: []api.AccessControlRule{{AccessType: "anonymous"}},
+	})
+	if err != nil {
+		log.Printf("Cloudinary certificate upload error: %v", err)
+		http.Error(w, `{"error": "Failed to upload Sertifikat Morris"}`, http.StatusInternalServerError)
+		return
 	}
 
-	// 6. Simpan URL dan data form yang sudah benar ke database
+	// CUKUP GUNAKAN URL ASLI DARI CLOUDINARY
+	certificateUrl := certUploadResult.SecureURL
+
+	// 6. Proses Upload Foto Formal
+	formalPhotoFile, _, err := r.FormFile("formal_photo")
+	if err != nil {
+		http.Error(w, `{"error": "Foto formal wajib diunggah"}`, http.StatusBadRequest)
+		return
+	}
+	defer formalPhotoFile.Close()
+
+	formalPhotoPublicID := fmt.Sprintf("himatif-registrations/%s_formal_photo_%d",
+		payload.NIM,
+		time.Now().Unix())
+
+	formalPhotoUploadResult, err := cld.Upload.Upload(ctx, formalPhotoFile, uploader.UploadParams{
+		PublicID:      formalPhotoPublicID,
+		ResourceType:  "image",
+		Overwrite:     api.Bool(true),
+		AccessControl: []api.AccessControlRule{{AccessType: "anonymous"}},
+	})
+	if err != nil {
+		log.Printf("Cloudinary formal photo upload error: %v", err)
+		http.Error(w, `{"error": "Failed to upload foto formal"}`, http.StatusInternalServerError)
+		return
+	}
+
+	formalPhotoUrl := formalPhotoUploadResult.SecureURL
+
+	// 7. Simpan URL dan data form yang sudah benar ke database
 	registration := model.Registration{
 		UserID:         payload.UserID,
 		Division1:      division1,
@@ -202,6 +230,7 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 		VisionMission:  r.FormValue("vision_mission"),
 		CvUrl:          cvUrl,
 		CertificateUrl: certificateUrl,
+		FormalPhotoUrl: formalPhotoUrl,
 		Status:         "pending",
 		Note:           "",
 		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
