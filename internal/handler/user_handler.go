@@ -5,8 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log" // Dibutuhkan untuk log.Println di SubmitRegistrationHandler
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
 
 	// "time"
@@ -24,6 +28,32 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func validateUploadedFile(file multipart.File, header *multipart.FileHeader, allowedExtensions map[string]struct{}, allowedMimePrefixes []string) error {
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	if _, ok := allowedExtensions[ext]; !ok {
+		return fmt.Errorf("format file %s tidak didukung", ext)
+	}
+
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+	if err != nil && err != io.EOF {
+		return fmt.Errorf("gagal membaca file")
+	}
+
+	if _, err := file.Seek(0, 0); err != nil {
+		return fmt.Errorf("gagal memeriksa file")
+	}
+
+	detectedMime := strings.ToLower(http.DetectContentType(buffer[:n]))
+	for _, prefix := range allowedMimePrefixes {
+		if strings.HasPrefix(detectedMime, strings.ToLower(prefix)) {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("tipe file %s tidak didukung", detectedMime)
+}
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var user model.User
@@ -140,12 +170,20 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// 4. Proses Upload CV (Wajib)
-	file, _, err := r.FormFile("cv") // Kita tidak butuh header, jadi gunakan _
+	file, fileHeader, err := r.FormFile("cv")
 	if err != nil {
 		http.Error(w, `{"error": "CV file is required"}`, http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
+
+	if err := validateUploadedFile(file, fileHeader, map[string]struct{}{
+		".png": {},
+		".pdf": {},
+	}, []string{"image/png", "application/pdf"}); err != nil {
+		http.Error(w, fmt.Sprintf(`{"error": "File CV tidak valid: %s"}`, err.Error()), http.StatusBadRequest)
+		return
+	}
 
 	// Buat Public ID yang unik untuk CV
 	cvPublicID := fmt.Sprintf("himatif-registrations/%s_cv_%d",
@@ -154,7 +192,7 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 
 	uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
 		PublicID:      cvPublicID,
-		ResourceType:  "image",
+		ResourceType:  "auto",
 		Overwrite:     api.Bool(true),
 		AccessControl: []api.AccessControlRule{{AccessType: "anonymous"}},
 	})
@@ -168,12 +206,20 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	cvUrl := uploadResult.SecureURL
 
 	// 5. Proses Upload Sertifikat Morris (Wajib)
-	certFile, _, err := r.FormFile("certificate")
+	certFile, certHeader, err := r.FormFile("certificate")
 	if err != nil {
 		http.Error(w, `{"error": "Sertifikat Morris wajib diunggah"}`, http.StatusBadRequest)
 		return
 	}
 	defer certFile.Close()
+
+	if err := validateUploadedFile(certFile, certHeader, map[string]struct{}{
+		".png": {},
+		".pdf": {},
+	}, []string{"image/png", "application/pdf"}); err != nil {
+		http.Error(w, fmt.Sprintf(`{"error": "File Sertifikat Morris tidak valid: %s"}`, err.Error()), http.StatusBadRequest)
+		return
+	}
 
 	// Buat Public ID yang unik untuk sertifikat
 	certPublicID := fmt.Sprintf("himatif-registrations/%s_cert_%d",
@@ -182,7 +228,7 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 
 	certUploadResult, err := cld.Upload.Upload(ctx, certFile, uploader.UploadParams{
 		PublicID:      certPublicID,
-		ResourceType:  "image",
+		ResourceType:  "auto",
 		Overwrite:     api.Bool(true),
 		AccessControl: []api.AccessControlRule{{AccessType: "anonymous"}},
 	})
@@ -197,9 +243,17 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 6. Proses Upload Sertifikat Bebas (Opsional)
 	optionalCertificateUrl := ""
-	optionalCertFile, _, err := r.FormFile("optional_certificate")
+	optionalCertFile, optionalCertHeader, err := r.FormFile("optional_certificate")
 	if err == nil {
 		defer optionalCertFile.Close()
+
+		if err := validateUploadedFile(optionalCertFile, optionalCertHeader, map[string]struct{}{
+			".png": {},
+			".pdf": {},
+		}, []string{"image/png", "application/pdf"}); err != nil {
+			http.Error(w, fmt.Sprintf(`{"error": "File Sertifikat Bebas tidak valid: %s"}`, err.Error()), http.StatusBadRequest)
+			return
+		}
 
 		optionalCertPublicID := fmt.Sprintf("himatif-registrations/%s_optional_cert_%d",
 			payload.NIM,
@@ -207,7 +261,7 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 
 		optionalCertUploadResult, err := cld.Upload.Upload(ctx, optionalCertFile, uploader.UploadParams{
 			PublicID:      optionalCertPublicID,
-			ResourceType:  "image",
+			ResourceType:  "auto",
 			Overwrite:     api.Bool(true),
 			AccessControl: []api.AccessControlRule{{AccessType: "anonymous"}},
 		})
@@ -221,12 +275,21 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 7. Proses Upload Foto Formal
-	formalPhotoFile, _, err := r.FormFile("formal_photo")
+	formalPhotoFile, formalPhotoHeader, err := r.FormFile("formal_photo")
 	if err != nil {
 		http.Error(w, `{"error": "Foto formal wajib diunggah"}`, http.StatusBadRequest)
 		return
 	}
 	defer formalPhotoFile.Close()
+
+	if err := validateUploadedFile(formalPhotoFile, formalPhotoHeader, map[string]struct{}{
+		".png": {},
+		".jpg": {},
+		".jpeg": {},
+	}, []string{"image/png", "image/jpeg"}); err != nil {
+		http.Error(w, fmt.Sprintf(`{"error": "File foto formal tidak valid: %s"}`, err.Error()), http.StatusBadRequest)
+		return
+	}
 
 	formalPhotoPublicID := fmt.Sprintf("himatif-registrations/%s_formal_photo_%d",
 		payload.NIM,
