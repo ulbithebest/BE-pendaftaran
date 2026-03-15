@@ -27,6 +27,7 @@ type Registration struct {
 	InterviewLocation string             `bson:"interview_location,omitempty" json:"interview_location,omitempty"`
 	CvUrl             string             `bson:"cv_url" json:"cv_url"` // <-- UBAH INI
 	CertificateUrl    string             `bson:"certificate_url,omitempty" json:"certificate_url,omitempty"`
+	OptionalCertificateUrl string        `bson:"optional_certificate_url,omitempty" json:"optional_certificate_url,omitempty"`
 	FormalPhotoUrl    string             `bson:"formal_photo_url,omitempty" json:"formal_photo_url,omitempty"`
 	Status            string             `bson:"status" json:"status"`
 	Note              string             `bson:"note" json:"note"`
@@ -45,6 +46,7 @@ type RegistrationDetail struct {
 	VisionMission  string             `bson:"vision_mission" json:"vision_mission"`
 	CvUrl          string             `bson:"cv_url" json:"cv_url"` // <-- UBAH INI
 	CertificateUrl string             `bson:"certificate_url,omitempty" json:"certificate_url,omitempty"`
+	OptionalCertificateUrl string      `bson:"optional_certificate_url,omitempty" json:"optional_certificate_url,omitempty"`
 	FormalPhotoUrl string             `bson:"formal_photo_url,omitempty" json:"formal_photo_url,omitempty"`
 	Status         string             `bson:"status" json:"status"`
 	Note           string             `bson:"note,omitempty" json:"note,omitempty"`

@@ -195,7 +195,32 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	// CUKUP GUNAKAN URL ASLI DARI CLOUDINARY
 	certificateUrl := certUploadResult.SecureURL
 
-	// 6. Proses Upload Foto Formal
+	// 6. Proses Upload Sertifikat Bebas (Opsional)
+	optionalCertificateUrl := ""
+	optionalCertFile, _, err := r.FormFile("optional_certificate")
+	if err == nil {
+		defer optionalCertFile.Close()
+
+		optionalCertPublicID := fmt.Sprintf("himatif-registrations/%s_optional_cert_%d",
+			payload.NIM,
+			time.Now().Unix())
+
+		optionalCertUploadResult, err := cld.Upload.Upload(ctx, optionalCertFile, uploader.UploadParams{
+			PublicID:      optionalCertPublicID,
+			ResourceType:  "image",
+			Overwrite:     api.Bool(true),
+			AccessControl: []api.AccessControlRule{{AccessType: "anonymous"}},
+		})
+		if err != nil {
+			log.Printf("Cloudinary optional certificate upload error: %v", err)
+			http.Error(w, `{"error": "Failed to upload sertifikat bebas"}`, http.StatusInternalServerError)
+			return
+		}
+
+		optionalCertificateUrl = optionalCertUploadResult.SecureURL
+	}
+
+	// 7. Proses Upload Foto Formal
 	formalPhotoFile, _, err := r.FormFile("formal_photo")
 	if err != nil {
 		http.Error(w, `{"error": "Foto formal wajib diunggah"}`, http.StatusBadRequest)
@@ -221,19 +246,20 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 
 	formalPhotoUrl := formalPhotoUploadResult.SecureURL
 
-	// 7. Simpan URL dan data form yang sudah benar ke database
+	// 8. Simpan URL dan data form yang sudah benar ke database
 	registration := model.Registration{
-		UserID:         payload.UserID,
-		Division1:      division1,
-		Division2:      division2,
-		Motivation:     r.FormValue("motivation"),
-		VisionMission:  r.FormValue("vision_mission"),
-		CvUrl:          cvUrl,
-		CertificateUrl: certificateUrl,
-		FormalPhotoUrl: formalPhotoUrl,
-		Status:         "pending",
-		Note:           "",
-		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
+		UserID:                 payload.UserID,
+		Division1:              division1,
+		Division2:              division2,
+		Motivation:             r.FormValue("motivation"),
+		VisionMission:          r.FormValue("vision_mission"),
+		CvUrl:                  cvUrl,
+		CertificateUrl:         certificateUrl,
+		OptionalCertificateUrl: optionalCertificateUrl,
+		FormalPhotoUrl:         formalPhotoUrl,
+		Status:                 "pending",
+		Note:                   "",
+		UpdatedAt:              primitive.NewDateTimeFromTime(time.Now()),
 	}
 
 	collection := repository.MongoClient.Database(cfg.DatabaseName).Collection("registrations")
