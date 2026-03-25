@@ -30,9 +30,15 @@ import (
 )
 
 func validateUploadedFile(file multipart.File, header *multipart.FileHeader, allowedExtensions map[string]struct{}, allowedMimePrefixes []string) error {
+	const maxFileSize = 2 << 20 // 2MB
+
 	ext := strings.ToLower(filepath.Ext(header.Filename))
 	if _, ok := allowedExtensions[ext]; !ok {
 		return fmt.Errorf("format file %s tidak didukung", ext)
+	}
+
+	if header.Size > maxFileSize {
+		return fmt.Errorf("ukuran file melebihi 2MB")
 	}
 
 	buffer := make([]byte, 512)
@@ -144,8 +150,8 @@ func SubmitRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Parse form (maks 10MB)
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
+	// 2. Parse form (beri ruang untuk multipart overhead, validasi per-file tetap 2MB)
+	if err := r.ParseMultipartForm(20 << 20); err != nil {
 		http.Error(w, `{"error": "File size exceeds limit"}`, http.StatusBadRequest)
 		return
 	}

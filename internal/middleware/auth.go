@@ -41,8 +41,19 @@ func AuthMiddleware(next http.Handler) http.Handler {
 func AdminOnlyMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		payload, ok := r.Context().Value(payloadKey).(*auth.PasetoPayload)
-		if !ok || payload.Role != "admin" {
+		if !ok || (payload.Role != "admin" && payload.Role != "super_admin") {
 			http.Error(w, `{"error": "Admin access required"}`, http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func SuperAdminOnlyMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		payload, ok := r.Context().Value(payloadKey).(*auth.PasetoPayload)
+		if !ok || payload.Role != "super_admin" {
+			http.Error(w, `{"error": "Super admin access required"}`, http.StatusForbidden)
 			return
 		}
 		next.ServeHTTP(w, r)

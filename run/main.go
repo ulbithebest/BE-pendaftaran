@@ -41,6 +41,7 @@ func main() {
 	r := chi.NewRouter()
 
 	// 6. Setup Middleware Global
+	r.Use(middleware.RequestLogMiddleware)
 	r.Use(chiMiddleware.Logger)    // Middleware untuk mencatat (log) setiap request yang masuk
 	r.Use(chiMiddleware.Recoverer) // Middleware untuk menangani panic dan menjaga server tetap hidup
 
@@ -95,6 +96,7 @@ func main() {
 			r.Post("/info", handler.CreateInfoHandler)
 			r.Put("/info/{id}", handler.UpdateInfoHandler)
 			r.Delete("/info/{id}", handler.DeleteInfoHandler)
+			r.With(middleware.SuperAdminOnlyMiddleware).Get("/logs", handler.GetAppLogsHandler)
 		})
 	})
 

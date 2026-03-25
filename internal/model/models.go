@@ -44,6 +44,8 @@ type RegistrationDetail struct {
 	Division2      string             `bson:"division2" json:"division2"`
 	Motivation     string             `bson:"motivation" json:"motivation"`
 	VisionMission  string             `bson:"vision_mission" json:"vision_mission"`
+	InterviewSchedule string          `bson:"interview_schedule,omitempty" json:"interview_schedule,omitempty"`
+	InterviewLocation string          `bson:"interview_location,omitempty" json:"interview_location,omitempty"`
 	CvUrl          string             `bson:"cv_url" json:"cv_url"` // <-- UBAH INI
 	CertificateUrl string             `bson:"certificate_url,omitempty" json:"certificate_url,omitempty"`
 	OptionalCertificateUrl string      `bson:"optional_certificate_url,omitempty" json:"optional_certificate_url,omitempty"`

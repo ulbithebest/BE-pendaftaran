@@ -72,6 +72,7 @@ func initializeApp() {
 	r := chi.NewRouter()
 
 	// 5. Global middlewares
+	r.Use(middleware.RequestLogMiddleware)
 	r.Use(chiMiddleware.Logger)
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(chiMiddleware.RealIP)
@@ -131,6 +132,7 @@ func initializeApp() {
 			r.Post("/info", handler.CreateInfoHandler)
 			r.Put("/info/{id}", handler.UpdateInfoHandler)
 			r.Delete("/info/{id}", handler.DeleteInfoHandler)
+			r.With(middleware.SuperAdminOnlyMiddleware).Get("/logs", handler.GetAppLogsHandler)
 		})
 	})
 

@@ -29,6 +29,7 @@ func GetAllRegistrationsDetailHandler(w http.ResponseWriter, r *http.Request) {
 		bson.D{{Key: "$project", Value: bson.D{
 			{Key: "_id", Value: 1}, {Key: "user_id", Value: 1}, {Key: "division1", Value: 1},
 			{Key: "division2", Value: 1}, {Key: "motivation", Value: 1}, {Key: "vision_mission", Value: 1},
+			{Key: "interview_schedule", Value: 1}, {Key: "interview_location", Value: 1},
 			{Key: "cv_url", Value: 1}, {Key: "certificate_url", Value: 1}, {Key: "optional_certificate_url", Value: 1}, {Key: "formal_photo_url", Value: 1}, {Key: "status", Value: 1},
 			{Key: "note", Value: 1}, {Key: "updated_at", Value: 1}, {Key: "name", Value: "$userDetails.name"},
 			{Key: "nim", Value: "$userDetails.nim"},
@@ -73,11 +74,13 @@ func UpdateRegistrationDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if payload.Status != "" {
 		updateFields["status"] = payload.Status
 	}
-	if payload.InterviewSchedule != "" {
+
+	if payload.Status == "interview" {
 		updateFields["interview_schedule"] = payload.InterviewSchedule
-	}
-	if payload.InterviewLocation != "" {
 		updateFields["interview_location"] = payload.InterviewLocation
+	} else {
+		updateFields["interview_schedule"] = ""
+		updateFields["interview_location"] = ""
 	}
 
 	updateFields["updated_at"] = primitive.NewDateTimeFromTime(time.Now())
