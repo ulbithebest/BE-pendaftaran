@@ -94,6 +94,7 @@ func main() {
 			r.Patch("/registrations/bulk-update", handler.BulkUpdateStatusHandler)
 			r.Get("/users", handler.GetAllUsersHandler)
 			r.With(middleware.SuperAdminOnlyMiddleware).Patch("/users/{id}", handler.UpdateUserHandler)
+			r.With(middleware.SuperAdminOnlyMiddleware).Patch("/users/{id}/password", handler.ResetUserPasswordHandler)
 			r.Delete("/registrations/{id}", handler.DeleteRegistrationHandler)
 			r.Post("/info", handler.CreateInfoHandler)
 			r.Put("/info/{id}", handler.UpdateInfoHandler)
@@ -108,5 +109,7 @@ func main() {
 		log.Fatalf("❌ Failed to start server: %v", err)
 	}
 }
+
+
 
 

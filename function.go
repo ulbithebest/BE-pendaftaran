@@ -129,6 +129,7 @@ func initializeApp() {
 			r.Patch("/registrations/bulk-update", handler.BulkUpdateStatusHandler)
 			r.Get("/users", handler.GetAllUsersHandler)
 			r.With(middleware.SuperAdminOnlyMiddleware).Patch("/users/{id}", handler.UpdateUserHandler)
+			r.With(middleware.SuperAdminOnlyMiddleware).Patch("/users/{id}/password", handler.ResetUserPasswordHandler)
 			r.Delete("/registrations/{id}", handler.DeleteRegistrationHandler)
 			r.Post("/info", handler.CreateInfoHandler)
 			r.Put("/info/{id}", handler.UpdateInfoHandler)
@@ -171,5 +172,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 func init() {
 	functions.HTTP("Pendaftaran", URL)
 }
+
+
 
 

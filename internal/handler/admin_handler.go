@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func GetAllRegistrationsDetailHandler(w http.ResponseWriter, r *http.Request) {
@@ -249,6 +250,51 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "User updated successfully"})
 }
 
+func ResetUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error": "Invalid user ID"}`, http.StatusBadRequest)
+		return
+	}
+
+	var payload struct {
+		NewPassword string `json:"new_password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		return
+	}
+
+	if len(payload.NewPassword) < 6 {
+		http.Error(w, `{"error": "Password baru minimal 6 karakter"}`, http.StatusBadRequest)
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, `{"error": "Failed to hash password"}`, http.StatusInternalServerError)
+		return
+	}
+
+	collection := repository.MongoClient.Database(config.GetConfig().DatabaseName).Collection("users")
+	result, err := collection.UpdateOne(context.TODO(), bson.M{"_id": userID}, bson.M{
+		"$set": bson.M{
+			"password": string(hashedPassword),
+		},
+	})
+	if err != nil {
+		http.Error(w, `{"error": "Failed to reset password"}`, http.StatusInternalServerError)
+		return
+	}
+	if result.MatchedCount == 0 {
+		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Password user berhasil diperbarui"})
+}
+
 // DeleteRegistrationHandler menghapus data pendaftaran berdasarkan ID
 func DeleteRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	// Mengambil ID dari parameter URL
@@ -277,3 +323,5 @@ func DeleteRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Registration deleted successfully"})
 }
+
+
