@@ -179,6 +179,76 @@ func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
+func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error": "Invalid user ID"}`, http.StatusBadRequest)
+		return
+	}
+
+	var payload model.User
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		return
+	}
+
+	if payload.Name == "" || payload.NIM == "" || payload.Email == "" || payload.PhoneNumber == "" {
+		http.Error(w, `{"error": "Nama, NIM, email, dan nomor telepon wajib diisi"}`, http.StatusBadRequest)
+		return
+	}
+
+	if len(payload.PhoneNumber) < 10 || len(payload.PhoneNumber) > 13 {
+		http.Error(w, `{"error": "Nomor telepon harus antara 10 hingga 13 digit."}`, http.StatusBadRequest)
+		return
+	}
+
+	if payload.Role != "user" && payload.Role != "admin" && payload.Role != "super_admin" {
+		http.Error(w, `{"error": "Role tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+
+	collection := repository.MongoClient.Database(config.GetConfig().DatabaseName).Collection("users")
+
+	var existingUser model.User
+	err = collection.FindOne(context.TODO(), bson.M{
+		"nim": payload.NIM,
+		"_id": bson.M{"$ne": userID},
+	}).Decode(&existingUser)
+	if err != nil && err != mongo.ErrNoDocuments {
+		http.Error(w, `{"error": "Failed to validate NIM"}`, http.StatusInternalServerError)
+		return
+	}
+	if err == nil {
+		http.Error(w, `{"error": "NIM already registered"}`, http.StatusConflict)
+		return
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"name":         payload.Name,
+			"nim":          payload.NIM,
+			"birth_place":  payload.BirthPlace,
+			"birth_date":   payload.BirthDate,
+			"email":        payload.Email,
+			"phone_number": payload.PhoneNumber,
+			"role":         payload.Role,
+		},
+	}
+
+	result, err := collection.UpdateOne(context.TODO(), bson.M{"_id": userID}, update)
+	if err != nil {
+		http.Error(w, `{"error": "Failed to update user"}`, http.StatusInternalServerError)
+		return
+	}
+	if result.MatchedCount == 0 {
+		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "User updated successfully"})
+}
+
 // DeleteRegistrationHandler menghapus data pendaftaran berdasarkan ID
 func DeleteRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	// Mengambil ID dari parameter URL

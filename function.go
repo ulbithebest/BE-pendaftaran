@@ -72,10 +72,10 @@ func initializeApp() {
 	r := chi.NewRouter()
 
 	// 5. Global middlewares
+	r.Use(chiMiddleware.RealIP)
 	r.Use(middleware.RequestLogMiddleware)
 	r.Use(chiMiddleware.Logger)
 	r.Use(chiMiddleware.Recoverer)
-	r.Use(chiMiddleware.RealIP)
 
 	// 6. Setup CORS
 	corsOptions := cors.Options{
@@ -128,6 +128,7 @@ func initializeApp() {
 			r.Patch("/registrations/{id}", handler.UpdateRegistrationDetailsHandler)
 			r.Patch("/registrations/bulk-update", handler.BulkUpdateStatusHandler)
 			r.Get("/users", handler.GetAllUsersHandler)
+			r.With(middleware.SuperAdminOnlyMiddleware).Patch("/users/{id}", handler.UpdateUserHandler)
 			r.Delete("/registrations/{id}", handler.DeleteRegistrationHandler)
 			r.Post("/info", handler.CreateInfoHandler)
 			r.Put("/info/{id}", handler.UpdateInfoHandler)
@@ -170,3 +171,5 @@ func URL(w http.ResponseWriter, r *http.Request) {
 func init() {
 	functions.HTTP("Pendaftaran", URL)
 }
+
+

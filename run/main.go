@@ -41,6 +41,7 @@ func main() {
 	r := chi.NewRouter()
 
 	// 6. Setup Middleware Global
+	r.Use(chiMiddleware.RealIP)
 	r.Use(middleware.RequestLogMiddleware)
 	r.Use(chiMiddleware.Logger)    // Middleware untuk mencatat (log) setiap request yang masuk
 	r.Use(chiMiddleware.Recoverer) // Middleware untuk menangani panic dan menjaga server tetap hidup
@@ -92,6 +93,7 @@ func main() {
 			r.Patch("/registrations/{id}", handler.UpdateRegistrationDetailsHandler)
 			r.Patch("/registrations/bulk-update", handler.BulkUpdateStatusHandler)
 			r.Get("/users", handler.GetAllUsersHandler)
+			r.With(middleware.SuperAdminOnlyMiddleware).Patch("/users/{id}", handler.UpdateUserHandler)
 			r.Delete("/registrations/{id}", handler.DeleteRegistrationHandler)
 			r.Post("/info", handler.CreateInfoHandler)
 			r.Put("/info/{id}", handler.UpdateInfoHandler)
@@ -106,3 +108,5 @@ func main() {
 		log.Fatalf("❌ Failed to start server: %v", err)
 	}
 }
+
+
