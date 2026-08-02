@@ -79,12 +79,9 @@ func initializeApp() {
 
 	// 6. Setup CORS
 	corsOptions := cors.Options{
-		AllowedOrigins: []string{
-			"https://ulbithebest.github.io", // GitHub Pages frontend
-			"http://localhost:5500",         // Local dev
-			"http://127.0.0.1:5500",
-			"http://127.0.0.1:5501",
-			"http://localhost:5501",
+		AllowedOrigins: []string{"*"},
+		AllowOriginFunc: func(r *http.Request, origin string) bool {
+			return true
 		},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
