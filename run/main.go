@@ -7,10 +7,10 @@ import (
 	// "strings"
 
 	// Pastikan path import ini sesuai dengan nama modul di go.mod Anda
-	"github.com/ulbithebest/BE-pendaftaran/internal/config"
-	"github.com/ulbithebest/BE-pendaftaran/internal/handler"
-	"github.com/ulbithebest/BE-pendaftaran/internal/middleware"
-	"github.com/ulbithebest/BE-pendaftaran/internal/repository"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/config"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/handler"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/middleware"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/repository"
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"

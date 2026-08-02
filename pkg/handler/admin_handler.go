@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/ulbithebest/BE-pendaftaran/internal/config"
-	"github.com/ulbithebest/BE-pendaftaran/internal/model" // <-- PERBAIKAN 1: Tambahkan import model
-	"github.com/ulbithebest/BE-pendaftaran/internal/repository"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/config"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/model" // <-- PERBAIKAN 1: Tambahkan import model
+	"github.com/ulbithebest/BE-pendaftaran/pkg/repository"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

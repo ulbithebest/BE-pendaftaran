@@ -18,11 +18,11 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
-	"github.com/ulbithebest/BE-pendaftaran/internal/auth"
-	"github.com/ulbithebest/BE-pendaftaran/internal/config" // <-- PASTIKAN CONFIG DI-IMPORT
-	"github.com/ulbithebest/BE-pendaftaran/internal/middleware"
-	"github.com/ulbithebest/BE-pendaftaran/internal/model"
-	"github.com/ulbithebest/BE-pendaftaran/internal/repository"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/auth"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/config" // <-- PASTIKAN CONFIG DI-IMPORT
+	"github.com/ulbithebest/BE-pendaftaran/pkg/middleware"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/model"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/repository"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

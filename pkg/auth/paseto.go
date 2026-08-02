@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/o1egl/paseto/v2"
-	"github.com/ulbithebest/BE-pendaftaran/internal/config"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/config"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

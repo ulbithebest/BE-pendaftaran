@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ulbithebest/BE-pendaftaran/internal/applog"
-	"github.com/ulbithebest/BE-pendaftaran/internal/auth"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/applog"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/auth"
 )
 
 type statusRecorder struct {

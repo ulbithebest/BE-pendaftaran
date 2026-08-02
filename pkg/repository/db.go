@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/ulbithebest/BE-pendaftaran/internal/config"
-	"github.com/ulbithebest/BE-pendaftaran/internal/model"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/config"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

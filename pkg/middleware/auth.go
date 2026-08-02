@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ulbithebest/BE-pendaftaran/internal/auth"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/auth"
 )
 
 type PasetoPayloadKey string

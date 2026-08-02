@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ulbithebest/BE-pendaftaran/internal/applog"
+	"github.com/ulbithebest/BE-pendaftaran/pkg/applog"
 )
 
 func GetAppLogsHandler(w http.ResponseWriter, r *http.Request) {
